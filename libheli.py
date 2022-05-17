@@ -158,6 +158,7 @@ class Heli:
         
         ##Ruhelage berechnen
         x_equi,u_equi=self.equilibrium(y_equi)
+        
 
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier die sollten die korrekten Matrizen angegeben werden
@@ -165,6 +166,31 @@ class Heli:
         B=np.zeros((3,2))
         C=np.zeros((2,3))
         D=np.zeros((2,2))
+        
+        # Hilfsvariablen
+        a22 = -self.c1/(self.J1+self.J2+self.J4)
+        a13 = -0.5*(self.J2+self.J4*2*np.square(y_equi[1]))-self.J4*u_equi[1]
+
+        u22 = 2*self.d1*self.s1*u_equi[1]+self.J4*self.c1/(self.J1+self.J2+self.J4)
+        u23 = 2*self.d2*self.s2*u_equi[1]-self.J4*x_equi[0]
+
+
+
+        A[0,2] = 1/((self.J3+self.J5)*self.c2)
+        A[1,1] = a22/self.c2
+        A[2,0] = a13/self.c2
+
+        B[0,0] = self.J5/((self.J3+self.J5)*self.c2)
+        B[1,1] = -u22/self.c2
+        B[2,1] = -u23/self.c2
+
+        
+
+        C[0,0] = 1
+        C[1,1] = 1/(self.J1+self.J2+self.J4)
+        D[1,1] = -self.J4/(self.J1+self.J2+self.J4)
+       
+
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
         
         return ContinuousLinearizedSystem(A,B,C,D,x_equi,u_equi,y_equi)
