@@ -106,6 +106,7 @@ class ContinuousLinearizedSystem(LinearizedSystem):
 
 class Heli:
     """Modell des Heliracks"""
+    
 
     def __init__(self):
         self.Vmax=0.024
@@ -114,7 +115,7 @@ class Heli:
         self.J3=0.013 
         self.J4=1e-05
         self.J5=1e-05  
-        self.c1=0.001
+        self.c1=0.001       
         self.c2=0.001
         self.s1=8e-7
         self.s2=8e-7
@@ -134,13 +135,29 @@ class Heli:
         #Hier die sollten die korrekten Ruhelagen in Abhängigkeit des zugehörigen Ausgangs berechnet werden
         x=np.zeros((3,))
         u=np.zeros((2,))
+        
+        
+        u[0] = np.sqrt(self.c1*dalpha/(self.d1*np.cos(epsilon)*self.s2))
+        #u[1] = (self.Vmax*np.cos(epsilon)-1/2*(self.J2+self.J4)*np.sin(2*epsilon)*np.square(dalpha))/(self.J4*np.sin(epsilon)*dalpha)
+        
+
+        x[0] = epsilon
+        x[1] = (self.J1+(self.J2+self.J4)*np.square(np.cos(epsilon)))*dalpha +self.J4*np.cos(epsilon)*u[1]
+        x[2] = self.J5*u[0]
+
+ 
+
+
+
+
+
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
 
         return x,u
         
     def linearize(self,y_equi,debug=False):
         #Berechnung der Systemmatrizen des linearen Systems
-
+        
         ##Ruhelage berechnen
         x_equi,u_equi=self.equilibrium(y_equi)
 
@@ -248,7 +265,7 @@ class Heli:
         bJ2=self.J2+self.J4
         bJ3=self.J3+self.J5
         if dq.ndim==1:
-            p[0]=self.J5*u[1]+bJ3*dq[0]
+            p[0]=self.J5*u[1]+bJ3*dq[0]    
             p[1]=self.J4*np.cos(q[0])*u[0]+(self.J1+bJ2*np.cos(q[0])**2)*dq[1]
         else:
             p[0,:]=self.J5*u[1,:]+bJ3*dq[0,:]
@@ -259,13 +276,13 @@ class Heli:
     def model(self,t,x,controller): 
         # t: Zeit
         # Zustand
-        # x[0]: Elevations-Winkel epsilon
-        # x[1]: Drehimpuls p_alpha
-        # x[2]: Drehimpuls p_epsilon
+        # x[0]:  Elevations-Winkel epsilon
+        # x[1]:  Drehimpuls p_alpha
+        # x[2]:  Drehimpuls p_epsilon
         # controller(t,x): Solldrehzalen werden als Funktion übergeben
-    
+      
         #Eingang auswerten
-        u=controller(t,x).flatten()
+        u=controller(t,x).flatten()   # [omega_alpha, omega_epsilon
         assert np.shape(u)==(2,)
 
         #Zustand auspacken
@@ -279,9 +296,20 @@ class Heli:
     
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier sollten die korrekten Ableitungen berechnet und zurückgegebenn werden
-        dot_epsilon=0
-        dot_p_alpha=0
-        dot_p_epsilon=0
+        # Hilfsgrößen
+        dot_alpha = (p_alpha-self.J4*ceps*u[1])/(self.J1+self.J2*np.square(ceps))
+        dot_epsilon= (p_epsilon-self.J5*u[0])/(self.J3+self.J5)
+
+        f_alpha = self.s1*np.abs(u[0])*u[0]      
+        d_alpha = self.c1*dot_alpha
+
+        f_epsilon = self.s2*np.abs(u[1])*u[1]
+        d_epsilon = self.c2*dot_epsilon
+        
+        
+        dot_epsilon= dot_epsilon 
+        dot_p_alpha= self.d1*ceps*f_alpha - d_alpha
+        dot_p_epsilon= -self.Vmax*ceps- 0.5*(self.J2+self.J4)*np.sin(2*epsilon)*np.square(dot_alpha) - self.J4*u[1]*seps*dot_alpha + self.d2*f_epsilon - d_epsilon
 
         dx=np.array([dot_epsilon,dot_p_alpha,dot_p_epsilon])
 
@@ -294,10 +322,15 @@ class Heli:
         u=controller(t,x)
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier sollten die korrekten Ausgänge berechnet werden
-        if np.isscalar(t):
+        if np.isscalar(t): 
             y=np.zeros((2,))
+            y[0] = x[0]
+            y[1] = (x[1]-self.J4*np.cos(x[0])*u[1])/(self.J1+self.J2*np.square(np.cos(x[0])))
+
         else:
             y=np.zeros((2,t.shape[0]))
+            y[0,:] = x[0]
+            y[1,:] = (x[1]-self.J4*np.cos(x[0])*u[1])/(self.J1+self.J2*np.square(np.cos(x[0])))
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
         return y
 
@@ -564,4 +597,8 @@ def plot_results(t,x,u,y):
     for v in u:
         plt.plot(t,v[1,:])
     plt.legend(leg)
+
+
+# %%
+
 
