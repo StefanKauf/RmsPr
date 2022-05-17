@@ -136,14 +136,6 @@ class Heli:
         x=np.zeros((3,))
         u=np.zeros((2,))
         
-        
-        u[0] = np.sqrt(self.c1*dalpha/(self.d1*np.cos(epsilon)*self.s2))
-        #u[1] = (self.Vmax*np.cos(epsilon)-1/2*(self.J2+self.J4)*np.sin(2*epsilon)*np.square(dalpha))/(self.J4*np.sin(epsilon)*dalpha)
-        
-
-        x[0] = epsilon
-        x[1] = (self.J1+(self.J2+self.J4)*np.square(np.cos(epsilon)))*dalpha +self.J4*np.cos(epsilon)*u[1]
-        x[2] = self.J5*u[0]
 
  
 
