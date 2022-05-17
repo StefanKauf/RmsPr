@@ -133,14 +133,20 @@ class Heli:
 
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier die sollten die korrekten Ruhelagen in Abhängigkeit des zugehörigen Ausgangs berechnet werden
+        # %%
         x=np.zeros((3,))
         u=np.zeros((2,))
         
+        # %%
+        q = -(self.Vmax*np.cos(epsilon)+0.5*(self.J2+self.J4)*np.sin(2*epsilon)*np.square(dalpha))/(self.d2*self.s2)
+        p = -self.J4*np.sin(epsilon)*dalpha/(self.d2*self.s2)
 
- 
+        u[0] = np.sqrt(self.c1*dalpha/(self.d1*np.cos(epsilon)*self.s1)) 
+        u[1] = np.abs(-p/2 + np.sqrt(np.square(p/2)-q))
 
-
-
+        x[0] = epsilon
+        x[1] = (self.J1+(self.J2+self.J4)*np.square(np.cos(epsilon)))*dalpha + self.J4*np.cos(epsilon)*u[1]
+        x[2] = self.J5*u[0]
 
 
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
@@ -274,7 +280,7 @@ class Heli:
         # controller(t,x): Solldrehzalen werden als Funktion übergeben
       
         #Eingang auswerten
-        u=controller(t,x).flatten()   # [omega_alpha, omega_epsilon
+        u=controller(t,x).flatten()   
         assert np.shape(u)==(2,)
 
         #Zustand auspacken
@@ -289,7 +295,7 @@ class Heli:
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier sollten die korrekten Ableitungen berechnet und zurückgegebenn werden
         # Hilfsgrößen
-        dot_alpha = (p_alpha-self.J4*ceps*u[1])/(self.J1+self.J2*np.square(ceps))
+        dot_alpha = (p_alpha-self.J4*ceps*u[1])/(self.J1+(self.J4+self.J2)*np.square(ceps))
         dot_epsilon= (p_epsilon-self.J5*u[0])/(self.J3+self.J5)
 
         f_alpha = self.s1*np.abs(u[0])*u[0]      
@@ -317,12 +323,12 @@ class Heli:
         if np.isscalar(t): 
             y=np.zeros((2,))
             y[0] = x[0]
-            y[1] = (x[1]-self.J4*np.cos(x[0])*u[1])/(self.J1+self.J2*np.square(np.cos(x[0])))
+            y[1] = (x[1]-self.J4*np.cos(x[0])*u[1])/(self.J1+(self.J2+self.J4)*np.square(np.cos(x[0])))
 
         else:
             y=np.zeros((2,t.shape[0]))
-            y[0,:] = x[0]
-            y[1,:] = (x[1]-self.J4*np.cos(x[0])*u[1])/(self.J1+self.J2*np.square(np.cos(x[0])))
+            y[0,:] = x[0,:]
+            y[1,:] = (x[1]-self.J4*np.cos(x[0])*u[1])/(self.J1+(self.J2+self.J4)*np.square(np.cos(x[0])))
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
         return y
 
@@ -591,6 +597,6 @@ def plot_results(t,x,u,y):
     plt.legend(leg)
 
 
-# %%
+
 
 
