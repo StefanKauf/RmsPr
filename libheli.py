@@ -162,33 +162,44 @@ class Heli:
 
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier die sollten die korrekten Matrizen angegeben werden
+        # %%
         A=np.zeros((3,3))
         B=np.zeros((3,2))
         C=np.zeros((2,3))
         D=np.zeros((2,2))
-        
+        # %%
         # Hilfsvariablen
-        a22 = -self.c1/(self.J1+self.J2+self.J4)
-        a13 = -0.5*(self.J2+self.J4*2*np.square(y_equi[1]))-self.J4*u_equi[1]
+        epsilon = y_equi[0]
+        dalpha  = y_equi[1]
+       # e = 1
 
-        u22 = 2*self.d1*self.s1*u_equi[1]+self.J4*self.c1/(self.J1+self.J2+self.J4)
-        u23 = 2*self.d2*self.s2*u_equi[1]-self.J4*x_equi[0]
+        c2eps = self.J1+(self.J2+self.J4)*np.square(np.cos(epsilon))    
+        #palpha_epsilon = e*(-((self.J2+self.J4)*(self.J4*np.square(np.cos(epsilon)))-2*(self.J2+self.J4)*x_equi[1]*np.cos(epsilon)-self.J1*self.J4*u_equi[1])*np.sin(epsilon)/np.square(c2eps)) # löschen
+        #palpha2_epsilon = e*2*((self.J4*np.cos(epsilon)*u_equi[1]-x_equi[1])*(c2eps-2*(self.J2+self.J4)*x_equi[1]*np.cos(epsilon))-self.J1*self.J4*u_equi[1])*np.sin(epsilon)/np.square(c2eps)
 
 
+        A[1,0] = -np.sin(epsilon)*self.d1*self.s1*u_equi[0] #+ palpha_epsilon
+        A[2,0] = self.Vmax*np.sin(epsilon)-(self.J2+self.J4)*np.cos(2*epsilon)*np.square(dalpha)-self.J4*u_equi[1]*np.cos(epsilon)*dalpha
+        #A[1,1] = e*(-self.c1/c2eps)  
+        #A[2,1] = e*(-self.J4*u_equi[1]*np.sin(epsilon)*palpha_epsilon-0.5*(self.J2+self.J4)*np.sin(2*epsilon)*palpha2_epsilon) #löschen
+        A[0,2] = 1/(self.J3+self.J5)
+        A[2,2] = -self.c2/(self.J3+self.J5)
+ 
 
-        A[0,2] = -self.c2/((self.J3+self.J5))
-        A[1,1] = -a22/self.c2
-        A[2,0] = -a13/self.c2
-
-        B[0,0] = self.J5/((self.J3+self.J5)*self.c2)
-        B[1,1] = -u22/self.c2
-        B[2,1] = -u23/self.c2
-
+        B[0,0] = -self.J5/(self.J3+self.J5)
+        B[1,0] = 2*self.d1*np.cos(epsilon)*self.s1         
+        B[2,0] = self.c2*self.J5/(self.J3+self.J5)         
+        #B[1,1] = self.c1*self.J4*np.cos(epsilon)/c2eps #
+        B[2,1] = self.J4*np.sin(epsilon)*dalpha + self.d2*self.s2*2*u_equi[1]
+              
         
 
         C[0,0] = 1
-        C[1,1] = 1/(self.J1+self.J2+self.J4)
-        D[1,1] = -self.J4/(self.J1+self.J2+self.J4)
+        C[1,0] = -((self.J2+self.J4)*self.J4*np.square(np.cos(epsilon))-2*(self.J2+self.J4)*x_equi[1]*np.cos(epsilon)-self.J1*self.J4*u_equi[1])*np.sin(epsilon)/np.square(c2eps)
+        C[1,1] = 1/c2eps         
+
+        D[1,1] = -self.J4*np.cos(epsilon)/c2eps
+       
        
 
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
