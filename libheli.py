@@ -174,28 +174,24 @@ class Heli:
        # e = 1
 
         c2eps = self.J1+(self.J2+self.J4)*np.square(np.cos(epsilon))    
-        #palpha_epsilon = e*(-((self.J2+self.J4)*(self.J4*np.square(np.cos(epsilon)))-2*(self.J2+self.J4)*x_equi[1]*np.cos(epsilon)-self.J1*self.J4*u_equi[1])*np.sin(epsilon)/np.square(c2eps)) # löschen
-        #palpha2_epsilon = e*2*((self.J4*np.cos(epsilon)*u_equi[1]-x_equi[1])*(c2eps-2*(self.J2+self.J4)*x_equi[1]*np.cos(epsilon))-self.J1*self.J4*u_equi[1])*np.sin(epsilon)/np.square(c2eps)
-
-
-        A[1,0] = -np.sin(epsilon)*self.d1*self.s1*u_equi[0] #+ palpha_epsilon
-        A[2,0] = self.Vmax*np.sin(epsilon)-(self.J2+self.J4)*np.cos(2*epsilon)*np.square(dalpha)-self.J4*u_equi[1]*np.cos(epsilon)*dalpha
-        #A[1,1] = e*(-self.c1/c2eps)  
-        #A[2,1] = e*(-self.J4*u_equi[1]*np.sin(epsilon)*palpha_epsilon-0.5*(self.J2+self.J4)*np.sin(2*epsilon)*palpha2_epsilon) #löschen
+  
+        A[1,0] = (-self.J4*self.c1*u_equi[1]*(c2eps) + 2*self.c1*(self.J2+self.J4)*(self.J4*u_equi[1]*np.cos(epsilon) - x_equi[1])*np.cos(epsilon) - self.d1*self.s1*u_equi[0]**2*(self.J1 + (self.J2+self.J4)*np.cos(epsilon)**2)**2)*np.sin(epsilon)/(self.J1 + (self.J2+self.J4)*np.cos(epsilon)**2)**2
+        A[2,0] = (self.J4*u_equi[1]*(c2eps)**2*(-self.J4*u_equi[1]*np.sin(epsilon)**2 + self.J4*u_equi[1] - x_equi[1]*np.cos(epsilon)) + self.Vmax*(c2eps)**3*np.sin(epsilon) - 0.5*(1 - np.cos(4*epsilon))*(self.J2 + self.J4)**2*(self.J4*u_equi[1]*np.cos(epsilon) - x_equi[1])**2 + 2*(c2eps)*(self.J2 + self.J4)*(self.J4*u_equi[1]*np.cos(epsilon) - x_equi[1])*(-3.0*self.J4*u_equi[1]*np.cos(epsilon)**3 + 2.5*self.J4*u_equi[1]*np.cos(epsilon) + x_equi[1]*np.cos(epsilon)**2 - 0.5*x_equi[1]))/(c2eps)**3
+        A[1,1] = -self.c1/c2eps
+        A[2,1] = (-self.J4*u_equi[1]*(c2eps)*np.sin(epsilon) +(self.J2 + self.J4)*(self.J4*u_equi[1]*np.cos(epsilon) - x_equi[1])*np.sin(2*epsilon))/(c2eps)**2
         A[0,2] = 1/(self.J3+self.J5)
         A[2,2] = -self.c2/(self.J3+self.J5)
- 
 
         B[0,0] = -self.J5/(self.J3+self.J5)
-        B[1,0] = 2*self.d1*np.cos(epsilon)*self.s1         
-        B[2,0] = self.c2*self.J5/(self.J3+self.J5)         
-        #B[1,1] = self.c1*self.J4*np.cos(epsilon)/c2eps #
-        B[2,1] = self.J4*np.sin(epsilon)*dalpha + self.d2*self.s2*2*u_equi[1]
-              
-        
+        B[1,0] = 2*self.d1*self.s1*np.cos(epsilon)*u_equi[0]         
+        B[2,0] = (self.J5*self.c2)/(self.J3 + self.J5) 
+        B[1,1] = self.J4*self.c1*np.cos(epsilon)/c2eps
+        B[2,1] = (self.J4*(c2eps)*(2*self.J4*u_equi[1]*np.cos(epsilon) - x_equi[1])*np.sin(epsilon) - self.J4*(self.J2 + self.J4)*(self.J4*u_equi[1]*np.cos(epsilon) - x_equi[1])*np.sin(2*epsilon)*np.cos(epsilon) + 2*self.d2*self.s2*u_equi[1]*(c2eps)**2)/(c2eps)**2
+
+
 
         C[0,0] = 1
-        C[1,0] = -((self.J2+self.J4)*self.J4*np.square(np.cos(epsilon))-2*(self.J2+self.J4)*x_equi[1]*np.cos(epsilon)-self.J1*self.J4*u_equi[1])*np.sin(epsilon)/np.square(c2eps)
+        C[1,0] = (self.J4*u_equi[1]*c2eps - 2*(self.J2 + self.J4)*(self.J4*u_equi[1]*np.cos(epsilon) - x_equi[1])*np.cos(epsilon))*np.sin(epsilon)/np.square(c2eps)
         C[1,1] = 1/c2eps         
 
         D[1,1] = -self.J4*np.cos(epsilon)/c2eps
