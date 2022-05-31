@@ -427,10 +427,9 @@ class ContinuousFlatnessBasedTrajectory:
             
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier bitte benötigte Zeilen wieder "dekommentieren" und Rest löschen
-        #self.A_rnf, Brnf, Crnf, self.M, self.Q, S = mimo_rnf(linearized_system.A, linearized_system.B, linearized_system.C, kronecker)
-        self.A_rnf=np.zeros((3,3))
-        self.M=np.eye(2)
-        self.Q=np.eye(3)
+        self.A_rnf, Brnf, Crnf, self.M, self.Q, S = mimo_rnf(linearized_system.A, linearized_system.B, linearized_system.C, kronecker)
+
+
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
 
         #Umrechnung stationäre Werte zwischen Ausgang und flachem Ausgang
@@ -440,6 +439,11 @@ class ContinuousFlatnessBasedTrajectory:
 
         self.eta_a=np.zeros_like(ya_rel)
         self.eta_b=np.zeros_like(yb_rel)
+
+        self.eta_a = ya_rel/(Crnf[:,0]+1e-25)      # +1e-25  epsilon for not dividung by zero
+        self.eta_b = yb_rel/(Crnf[:,1]+1e-25)
+
+       
 
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
 
@@ -459,6 +463,18 @@ class ContinuousFlatnessBasedTrajectory:
         dim_t=np.size(tv)
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         state=np.zeros((dim_x,dim_t))
+        # Calc eta
+        eta=list()
+        for index in range(dim_u):
+            eta=eta+[self.flat_output(tv,index,deri) for deri in range(self.kronecker[index])]
+        xrnf=np.vstack(eta)
+        # Transform from RNF to original Koordinates
+        state=((np.linalg.inv(self.Q)@xrnf)+self.linearized_system.x_equi.reshape((dim_x,1)))
+        if (np.isscalar(t)):
+            state=state[:,0]
+        
+
+
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
         return state
 
