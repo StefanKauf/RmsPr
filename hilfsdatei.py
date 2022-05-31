@@ -1,22 +1,25 @@
+#%%
 import sympy as sym
 import numpy as np
 
 
 # Aufgabe 1.4 Liniarisierung
 
+
 epsilon, p_epsilon, p_alpha, J1, J2, J3, J4, J5,c1,c2, d1,d2,s1,s2, u1, u2, Vmax = sym.symbols('epsilon, p_epsilon, p_alpha, J1, J2, J3, J4, J5, c1,c2, d1,d2,s1,s2, u1, u2, Vmax')
 
-
+# %%
+# Eingangsgleichung
 ceps = sym.cos(epsilon)
 seps = sym.sin(epsilon)
 
 dot_alpha = (p_alpha-J4*ceps*u2)/(J1+(J4+J2)*np.square(ceps))
 dot_epsilon= (p_epsilon-J5*u1)/(J3+J5)
 
-f_alpha = s1*u1*u1      
+f_alpha = s1*u1**2      
 d_alpha = c1*dot_alpha
 
-f_epsilon = s2*u1*u1
+f_epsilon = s2*u2**2
 d_epsilon = c2*dot_epsilon
         
         
@@ -34,13 +37,48 @@ c = sym.diff(dx, p_epsilon)
 d = sym.diff(dx, u1)
 e = sym.diff(dx, u2)
 
-A = sym.Matrix([a,b,c])
-B = sym.Matrix([d,e])
+ #%%
+a = sym.simplify(a)
+b = sym.simplify(b)
+c = sym.simplify(c)
+d = sym.simplify(d)
+e = sym.simplify(e)
+
+A = [a,b,c]
+B = [d,e]
+
+
+#%%
+# Ausgangsgleichung
+
+y1 = epsilon
+y2  = dot_alpha
+
+y = sym.Matrix([y1,y2])
+
+
+a = sym.diff(y, epsilon)
+b = sym.diff(y, p_alpha)
+c = sym.diff(y, p_epsilon)
+d = sym.diff(y, u1)
+e = sym.diff(y, u2)
 
 a = sym.simplify(a)
-print(a)
+b = sym.simplify(b)
+c = sym.simplify(c)
+d = sym.simplify(d)
+e = sym.simplify(e)
+
+C = [a,b,c]
+D = [d,e]
 
 
 
 
 
+
+
+
+
+
+# %%
