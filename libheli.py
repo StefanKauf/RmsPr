@@ -39,7 +39,9 @@ class LinearizedSystem:
 class DiscreteLinearizedSystem(LinearizedSystem):
     def __init__(self,A,B,C,D,x_equi,u_equi,y_equi,Ta):
         super().__init__(A,B,C,D,x_equi,u_equi,y_equi)
-        self.Ta=0
+        #self.Ta=Ta
+        self.A, self.B, self.C, self.D, self.Ta = cont2discrete((A,B,C,D),Ta)
+        print('Discrete Start')
 
     #Quadratisch optimaler Regler
     def lqr(self,Q,R,S):
@@ -548,10 +550,10 @@ class DiscreteFlatnessBasedTrajectory:
         #Matrizen der Regelungsnormalform holen
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier bitte benötigte Zeilen wieder "einkommentieren" und Rest löschen
-        #self.A_rnf, Brnf, Crnf, self.M, self.Q, S = mimo_rnf(linearized_system.A, linearized_system.B, linearized_system.C, kronecker)
-        self.A_rnf=np.zeros((3,3))
-        self.M=np.eye(2)
-        self.Q=np.eye(3)
+        self.A_rnf, self.Brnf, self.Crnf, self.M, self.Q, S = mimo_rnf(linearized_system.A, linearized_system.B, linearized_system.C, kronecker)
+        #self.A_rnf=np.zeros((3,3))
+        #self.M=np.eye(2)
+        #self.Q=np.eye(3)
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
 
         #Umrechnung stationäre Werte zwischen Ausgang und flachem Ausgang
@@ -562,6 +564,11 @@ class DiscreteFlatnessBasedTrajectory:
 
         self.eta_a=np.zeros_like(ya_rel)
         self.eta_b=np.zeros_like(yb_rel)
+
+        C_inv = np.linalg.inv(self.Crnf[:,0:2])
+
+        self.eta_a = np.dot(C_inv,ya_rel)         
+        self.eta_b = np.dot(C_inv,yb_rel) 
 
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
 
@@ -577,9 +584,16 @@ class DiscreteFlatnessBasedTrajectory:
 
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier sollten die korrekten Werte für die um "shift" nach links verschobene Trajektorie des flachen Ausgangs zurückgegeben werden
-
+        tau = k  / self.N
         eta= np.zeros_like(k)
-        return eta
+
+        if shift==0:
+            return self.eta_a[index] + (self.eta_b[index] - self.eta_a[index]) * poly_transition(tau,0,self.maxderi[index])
+        else:
+            return (self.eta_b[index] - self.eta_a[index]) * poly_transition(tau,shift,self.maxderi[index])/self.N**shift 
+
+
+        #return eta
 
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
 
@@ -593,6 +607,15 @@ class DiscreteFlatnessBasedTrajectory:
         dim_k=np.size(k)
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         state=np.zeros((dim_x,dim_k))
+        eta=list()
+        for index in range(dim_u):
+            eta=eta+[self.flat_output(kv,index,shift) for shift in range(self.kronecker[index])]
+        xrnf=np.vstack(eta)
+        # Transform from RNF to original Koordinates
+        state=(np.linalg.inv(self.Q)@xrnf)+self.linearized_system.x_equi.reshape((dim_x,1))
+        if (np.isscalar(k)):
+            state=state[:,0]
+        
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
         return state
 
@@ -610,7 +633,7 @@ class DiscreteFlatnessBasedTrajectory:
         y_rel=self.linearized_system.C@x_rel+self.linearized_system.D@u_rel
         y_abs=y_rel+self.linearized_system.y_equi.reshape((dim_y,1))
         if (np.isscalar(k)):
-            y_abs=result[:,0]
+            y_abs=y_abs[:,0]
         return y_abs
 
     #Eingangstrajektorie
@@ -620,6 +643,18 @@ class DiscreteFlatnessBasedTrajectory:
         dim_k=np.size(kv)
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         input=np.zeros((dim_u,dim_k))
+
+        eta=list()
+        for index in range(dim_u):
+            eta=eta+[self.flat_output(kv,index,shift) for shift in range(self.kronecker[index])]
+        xrnf=np.vstack(eta)
+        v=-self.A_rnf[self.kronecker.cumsum()-1,:]@xrnf
+        for jj in range(self.kronecker.shape[0]):
+            v[jj,:]+=self.flat_output(kv,jj,self.kronecker[jj])
+        input=(np.linalg.inv(self.M)@v)+self.linearized_system.u_equi.reshape((dim_u,1))
+
+
+
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
         if (np.isscalar(k)):
             input=input[:,0]
