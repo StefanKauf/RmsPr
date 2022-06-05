@@ -1,3 +1,4 @@
+# %%
 import numpy as np
 import scipy.linalg as sla
 import matplotlib.pyplot as plt
@@ -7,6 +8,7 @@ from scipy.linalg import solve_continuous_are
 from scipy.linalg import solve_discrete_are
 from scipy.signal import cont2discrete
 
+# %%
 class LinearizedSystem:
     def __init__(self,A,B,C,D,x_equi,u_equi,y_equi):
         self.A=A
@@ -417,7 +419,7 @@ class ContinuousFlatnessBasedTrajectory:
     def __init__(self,linearized_system,ya,yb,T,kronecker,maxderi=None):
         self.linearized_system=linearized_system
         self.T=T
-        ya_rel=np.array(ya)-linearized_system.y_equi
+        ya_rel=np.array(ya)-linearized_system.y_equi      
         yb_rel=np.array(yb)-linearized_system.y_equi
         self.kronecker=np.array(kronecker,dtype=int)
         if maxderi==None:
@@ -427,7 +429,7 @@ class ContinuousFlatnessBasedTrajectory:
             
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier bitte benötigte Zeilen wieder "dekommentieren" und Rest löschen
-        self.A_rnf, Brnf, Crnf, self.M, self.Q, S = mimo_rnf(linearized_system.A, linearized_system.B, linearized_system.C, kronecker)
+        self.A_rnf, self.Brnf, self.Crnf, self.M, self.Q, self.S = mimo_rnf(linearized_system.A, linearized_system.B, linearized_system.C, kronecker)
 
 
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
@@ -440,12 +442,14 @@ class ContinuousFlatnessBasedTrajectory:
         self.eta_a=np.zeros_like(ya_rel)
         self.eta_b=np.zeros_like(yb_rel)
 
-        self.eta_a = ya_rel/(Crnf[:,0]+1e-25)      # +1e-25  epsilon for not dividung by zero
-        self.eta_b = yb_rel/(Crnf[:,1]+1e-25)
+        C_inv = np.linalg.inv(self.Crnf[:,0:2])
+
+        self.eta_a = np.dot(C_inv,ya_rel)         self.eta_b = np.dot(C_inv,yb_rel) 
 
        
 
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
+
 
     # Trajektorie des flachen Ausgangs
     def flat_output(self,t,index,derivative):
@@ -469,7 +473,7 @@ class ContinuousFlatnessBasedTrajectory:
             eta=eta+[self.flat_output(tv,index,deri) for deri in range(self.kronecker[index])]
         xrnf=np.vstack(eta)
         # Transform from RNF to original Koordinates
-        state=((np.linalg.inv(self.Q)@xrnf)+self.linearized_system.x_equi.reshape((dim_x,1)))
+        state=(np.linalg.inv(self.Q)@xrnf)+self.linearized_system.x_equi.reshape((dim_x,1))
         if (np.isscalar(t)):
             state=state[:,0]
         
@@ -492,7 +496,7 @@ class ContinuousFlatnessBasedTrajectory:
         y_rel=self.linearized_system.C@x_rel+self.linearized_system.D@u_rel
         y_abs=y_rel+self.linearized_system.y_equi.reshape((dim_y,1))
         if (np.isscalar(t)):
-            y_abs=result[:,0]
+            y_abs=y_abs[:,0]
         return y_abs
 
     #Eingangstrajektorie
