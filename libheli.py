@@ -444,7 +444,8 @@ class ContinuousFlatnessBasedTrajectory:
 
         C_inv = np.linalg.inv(self.Crnf[:,0:2])
 
-        self.eta_a = np.dot(C_inv,ya_rel)         self.eta_b = np.dot(C_inv,yb_rel) 
+        self.eta_a = np.dot(C_inv,ya_rel)         
+        self.eta_b = np.dot(C_inv,yb_rel) 
 
        
 
