@@ -48,6 +48,11 @@ class DiscreteLinearizedSystem(LinearizedSystem):
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier sollten die korrekten Reglerverstärkungen berechnet werden
         K_lqr=np.zeros((R.shape[0],Q.shape[0]))
+
+        P = solve_discrete_are(self.A, self.B,Q, R , None, S)
+        
+        K_lqr = sla.inv(R)@self.B.transpose()@P
+        
         return K_lqr
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
 
@@ -70,6 +75,12 @@ class ContinuousLinearizedSystem(LinearizedSystem):
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier sollten die korrekten Reglerverstärkungen berechnet werden
         K_lqr=np.zeros((R.shape[0],Q.shape[0]))
+
+        P = solve_continuous_are(self.A, self.B,Q, R , None, S)
+        
+        K_lqr = sla.inv(R)@self.B.transpose()@P
+        
+
         return K_lqr
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
 
