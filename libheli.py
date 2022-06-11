@@ -39,9 +39,9 @@ class LinearizedSystem:
 class DiscreteLinearizedSystem(LinearizedSystem):
     def __init__(self,A,B,C,D,x_equi,u_equi,y_equi,Ta):
         super().__init__(A,B,C,D,x_equi,u_equi,y_equi)
-        #self.Ta=Ta
+        
         self.A, self.B, self.C, self.D, self.Ta = cont2discrete((A,B,C,D),Ta)
-        print('Discrete Start')
+        #print('Discrete Start')
 
     #Quadratisch optimaler Regler
     def lqr(self,Q,R,S):
@@ -467,7 +467,7 @@ class ContinuousFlatnessBasedTrajectory:
 
     # Trajektorie des flachen Ausgangs
     def flat_output(self,t,index,derivative):
-        tau = t  / self.T
+        tau = t / self.T
         if derivative==0:
             return self.eta_a[index] + (self.eta_b[index] - self.eta_a[index]) * poly_transition(tau,0,self.maxderi[index])
         else:
@@ -599,12 +599,12 @@ class DiscreteFlatnessBasedTrajectory:
         eta= np.zeros_like(k)
 
         if shift==0:
-            return self.eta_a[index] + (self.eta_b[index] - self.eta_a[index]) * poly_transition(tau,0,self.maxderi[index])
+            eta = self.eta_a[index] + (self.eta_b[index] - self.eta_a[index]) * poly_transition(tau,0,self.maxderi[index])
         else:
-            return (self.eta_b[index] - self.eta_a[index]) * poly_transition(tau,shift,self.maxderi[index])/self.N**shift 
+            eta =  (self.eta_b[index] - self.eta_a[index]) * poly_transition(tau,shift,self.maxderi[index])/self.N**shift 
 
 
-        #return eta
+        return eta
 
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
 
@@ -653,7 +653,7 @@ class DiscreteFlatnessBasedTrajectory:
         dim_u=np.size(self.linearized_system.u_equi)
         dim_k=np.size(kv)
         ######-------!!!!!!Aufgabe!!!!!!-------------########
-        input=np.zeros((dim_u,dim_k))
+        result=np.zeros((dim_u,dim_k))
 
         eta=list()
         for index in range(dim_u):
@@ -662,14 +662,15 @@ class DiscreteFlatnessBasedTrajectory:
         v=-self.A_rnf[self.kronecker.cumsum()-1,:]@xrnf
         for jj in range(self.kronecker.shape[0]):
             v[jj,:]+=self.flat_output(kv,jj,self.kronecker[jj])
-        input=(np.linalg.inv(self.M)@v)+self.linearized_system.u_equi.reshape((dim_u,1))
+        
+        result=  (np.linalg.inv(self.M)@v)  + self.linearized_system.u_equi.reshape((dim_u,1))
 
 
 
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
         if (np.isscalar(k)):
-            input=input[:,0]
-        return input
+            result=result[:,0]
+        return result
 
 
 def plot_results(t,x,u,y):
