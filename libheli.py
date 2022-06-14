@@ -52,8 +52,7 @@ class DiscreteLinearizedSystem(LinearizedSystem):
         super().__init__(A,B,C,D,x_equi,u_equi,y_equi)
         
         self.A, self.B, self.C, self.D, self.Ta = cont2discrete((A,B,C,D),Ta)
-        #print('Discrete Start')
-
+        
     #Quadratisch optimaler Regler
     def lqr(self,Q,R,S):
         ######-------!!!!!!Aufgabe!!!!!!-------------########
@@ -645,7 +644,7 @@ class DiscreteFlatnessBasedTrajectory:
         #Matrizen der Regelungsnormalform holen
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier bitte benötigte Zeilen wieder "einkommentieren" und Rest löschen
-        self.A_rnf, self.Brnf, self.Crnf, self.M, self.Q, S = mimo_rnf(linearized_system.A, linearized_system.B, linearized_system.C, kronecker)
+        self.A_rnf, self.Brnf, self.Crnf, self.M, self.Q, S = mimo_rnf(linearized_system.A, linearized_system.B, linearized_system.C, self.kronecker)
 
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
 
@@ -655,16 +654,24 @@ class DiscreteFlatnessBasedTrajectory:
         #Hier sollten die korrekten Anfangs und Endwerte für den flachen Ausgang berechnet werden
         #Achtung: Hier sollten alle Werte relativ zum Arbeitspunkt angegeben werden
 
+
+        """
+        Für die stationären Werte müssen eta_1 eta_2 und um 1 verschobenen eta_2 betrachtet werden.  Die Ausgngsmatrix kann auf zwei Splalten reduziert werden, wenn man die letzten zwei Spalten
+        Komponentenweise addiert. Beide sind eta_2. Damit ergibt sich die Form wie im Skriptum S.56 
+        y = C*eta + D,    D = 0
+        diese wird auf eta aufgelöst
+
+        eta = inv(C)*y    --> eta entspricht dabei einem Spaltenvektor mit zwei stationären flachen Ausgängen  [eta_1 , eta_2] für die jeweiligen Teilssysteme     
+
+        """
+
         self.eta_a=np.zeros_like(ya_rel)
         self.eta_b=np.zeros_like(yb_rel)
 
         C_discrete = self.Crnf[:,0:2] + 0
         C_discrete[:,1] = self.Crnf[:,1] + self.Crnf[:,2] 
 
-        #C_inv = np.linalg.inv(self.Crnf[:,0:2])     
-        C_inv = np.linalg.inv(C_discrete)      
-
-       
+        C_inv = np.linalg.inv(C_discrete)            
 
         self.eta_a =  np.dot(C_inv,ya_rel)        
         self.eta_b =  np.dot(C_inv,yb_rel) 
@@ -682,16 +689,19 @@ class DiscreteFlatnessBasedTrajectory:
         # index: Komponente des flachen Ausgangs"""
 
         ######-------!!!!!!Aufgabe!!!!!!-------------########
-        #Hier sollten die korrekten Werte für die um "shift" nach links verschobene Trajektorie des flachen Ausgangs zurückgegeben werden
-        tau = (k-shift)/(self.N-shift)
+        #Hier sollten die korrekten Werte für die um "shift" nach links verschobene Trajektorie des flachen Ausgangs zurückgegeben werden          
+        # 
+        """
+        Die Implementierung von eta kann dem Skriptum Seite 56-58 entnommen werden. 
+        Zur Implementierung des Zeitverlaufs ist es nötig für eta_2 bei k+1 eine linksverschiebung zu bewirken. Da im diskreten Fall die Ableitung des flachen Ausgangs einer Linksverschiebung der Funktion gleichkommt. 
+        Dies wird in tau folgendermaßen implementiert:  tau = (k - maxderi[i] + shift)/ (N-maxder[i])     k entspricht hierbei dem aktuellen Zeitpunkt, maxderi[i] der Maximalen Verschiebung für jeden flachen Ausgang seperat und shift die Verschiebung selbst.         
+        """    
+        tau = (k-self.maxderi[index]+shift)/(self.N-self.maxderi[index])     # jede Ableitung von der Trajektorie ist um eine Zeiteinheit nach links Verschoben  --> Skriptum S.56-58  
+        
         eta= np.zeros_like(k)
-
-        if shift==0:
-            eta = self.eta_a[index] + (self.eta_b[index] - self.eta_a[index]) * poly_transition(tau,0,self.maxderi[index])
-        else:
-            eta =  (self.eta_b[index] - self.eta_a[index]) * poly_transition(tau,shift,self.maxderi[index])/self.N**shift 
-
-
+        
+        eta = self.eta_a[index] + (self.eta_b[index] - self.eta_a[index]) * poly_transition(tau,0,self.maxderi[index])
+        
         return eta
 
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
