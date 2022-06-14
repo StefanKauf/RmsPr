@@ -646,9 +646,7 @@ class DiscreteFlatnessBasedTrajectory:
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier bitte benötigte Zeilen wieder "einkommentieren" und Rest löschen
         self.A_rnf, self.Brnf, self.Crnf, self.M, self.Q, S = mimo_rnf(linearized_system.A, linearized_system.B, linearized_system.C, kronecker)
-        #self.A_rnf=np.zeros((3,3))
-        #self.M=np.eye(2)
-        #self.Q=np.eye(3)
+
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
 
         #Umrechnung stationäre Werte zwischen Ausgang und flachem Ausgang
@@ -660,10 +658,16 @@ class DiscreteFlatnessBasedTrajectory:
         self.eta_a=np.zeros_like(ya_rel)
         self.eta_b=np.zeros_like(yb_rel)
 
-        C_inv = np.linalg.inv(self.Crnf[:,0:2])
+        C_discrete = self.Crnf[:,0:2] + 0
+        C_discrete[:,1] = self.Crnf[:,1] + self.Crnf[:,2] 
 
-        self.eta_a = np.dot(C_inv,ya_rel)         
-        self.eta_b = np.dot(C_inv,yb_rel) 
+        #C_inv = np.linalg.inv(self.Crnf[:,0:2])     
+        C_inv = np.linalg.inv(C_discrete)      
+
+       
+
+        self.eta_a =  np.dot(C_inv,ya_rel)        
+        self.eta_b =  np.dot(C_inv,yb_rel) 
 
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
 
@@ -679,7 +683,7 @@ class DiscreteFlatnessBasedTrajectory:
 
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier sollten die korrekten Werte für die um "shift" nach links verschobene Trajektorie des flachen Ausgangs zurückgegeben werden
-        tau = k  / self.N
+        tau = (k-shift)/(self.N-shift)
         eta= np.zeros_like(k)
 
         if shift==0:
@@ -703,10 +707,18 @@ class DiscreteFlatnessBasedTrajectory:
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         state=np.zeros((dim_x,dim_k))
         eta=list()
+        """   
+        der flache Ausgang besteht aus dem jetzigen Wert eta + der Änderung. Die Änderung hängt nun von der Linksverschiebung ab.
+        im zweiten Schritt xrnf = eta wir eta als Spaltenvektor dargestellt. In der RNF ist der erste Zustand = dem flachen Ausgang, da das Teilsystem somit nur mehr von eta, dessen Ableitungen und dem Eingang abhängt.
+        """
         for index in range(dim_u):
             eta=eta+[self.flat_output(kv,index,shift) for shift in range(self.kronecker[index])]
         xrnf=np.vstack(eta)
         # Transform from RNF to original Koordinates
+        """   
+        nun wird eta in die Orginalkoordinaten Transformiert und die Ruhelage dazugerechnet, da wir bis jetzt nur die Differenz von eta nicht jedoch die Absolutwerte betrachtet haben.
+        Die Transformationsforschrift kann dem Skriptum S.79   x_quer = Q*x   entnommen werden
+        """
         state=(np.linalg.inv(self.Q)@xrnf)+self.linearized_system.x_equi.reshape((dim_x,1))
         if (np.isscalar(k)):
             state=state[:,0]
@@ -738,11 +750,19 @@ class DiscreteFlatnessBasedTrajectory:
         dim_k=np.size(kv)
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         result=np.zeros((dim_u,dim_k))
-
+        """   
+        der flache Ausgang besteht aus dem jetzigen Wert eta + der Änderung. Die Änderung hängt nun von der Linksverschiebung ab.
+        im zweiten Schritt xrnf = eta wir eta als Spaltenvektor dargestellt. In der RNF ist der erste Zustand = dem flachen Ausgang, da das Teilsystem somit nur mehr von eta, dessen Ableitungen und dem Eingang abhängt.
+        """
         eta=list()
         for index in range(dim_u):
             eta=eta+[self.flat_output(kv,index,shift) for shift in range(self.kronecker[index])]
         xrnf=np.vstack(eta)
+        """   
+        Anschließend wir der Hilfseingang v als Funktion von eta definiert --> siehe Skriptum S. 79
+        die Spalten von v werden in einem zweiten Schritt zusammengezählt. Alternativ kann mann dies auch als Matrix Vektor Multiplikation geschrieben werden.
+        im letzten Schritt wird noch die Ruhelage addiert.
+        """
         v=-self.A_rnf[self.kronecker.cumsum()-1,:]@xrnf
         for jj in range(self.kronecker.shape[0]):
             v[jj,:]+=self.flat_output(kv,jj,self.kronecker[jj])
