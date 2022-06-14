@@ -1,6 +1,10 @@
-""
+"""
+Author:   Gruppe 11
+Member:   Paul Leonard Zens, Stefan Kaufmann
+Date:     14.09.2022
+Project:  Programmierübung Helirack
 
-""
+"""
 
 
 # %%
@@ -516,6 +520,14 @@ class ContinuousFlatnessBasedTrajectory:
         #Hier sollten die korrekten Anfangs und Endwerte für den flachen Ausgang berechnet werden
         #Achtung: Hier sollten alle werte relativ zum Arbeitspunkt angegeben werden
 
+        """
+        Für die stationären Werte werden lediglich eta 1 und 2, nicht jedoch deren Ableitungen betrachtet. Deshalb reduziert sich die Ausgansmatrix C auf zwei Spalten.
+        y = C*eta + D,    D = 0
+        diese wird auf eta aufgelöst
+
+        eta = inv(C)*y    --> eta entspricht dabei einem Spaltenvektor mit zwei stationären flachen Ausgängen  [eta_1 , eta_2] für die jeweiligen Teilssysteme     
+
+        """
         self.eta_a=np.zeros_like(ya_rel)
         self.eta_b=np.zeros_like(yb_rel)
 
@@ -544,18 +556,26 @@ class ContinuousFlatnessBasedTrajectory:
         dim_x=np.size(self.linearized_system.x_equi)
         dim_t=np.size(tv)
         ######-------!!!!!!Aufgabe!!!!!!-------------########
+   
         state=np.zeros((dim_x,dim_t))
         # Calc eta
+        """   
+        der flache Ausgang besteht aus dem jetzigen Wert eta + der Änderung. Die Änderung hängt nun von der Ordnung der Ableitung von eta ab.
+        im zweiten Schritt xrnf = eta wir eta als Spaltenvektor dargestellt. In der RNF ist der erste Zustand = dem flachen Ausgang, da das Teilsystem somit nur mehr von eta, dessen Ableitungen und dem Eingang abhängt.
+        """
         eta=list()
         for index in range(dim_u):
             eta=eta+[self.flat_output(tv,index,deri) for deri in range(self.kronecker[index])]
         xrnf=np.vstack(eta)
+        """   
+        nun wird eta in die Orginalkoordinaten Transformiert und die Ruhelage dazugerechnet, da wir bis jetzt nur die Differenz von eta nicht jedoch die Absolutwerte betrachtet haben.
+        Die Transformationsforschrift kann dem Skriptum S.79   x_quer = Q*x   entnommen werden
+        """
         # Transform from RNF to original Koordinates
         state=(np.linalg.inv(self.Q)@xrnf)+self.linearized_system.x_equi.reshape((dim_x,1))
         if (np.isscalar(t)):
             state=state[:,0]
         
-
 
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
         return state

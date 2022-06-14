@@ -5,22 +5,30 @@ Date:     14.09.2022
 Project:  Programmierübung Helirack
 
 """
-import sympy as sym
-import numpy as np
-from IPython.display import display, Math 
+
 
 """
 Aufgabe 1.d 
 Liniarisierung der nichtlinearen Zustandsdifferntialgleichung
 Diese wir mittels der symbolischen Toolbox von Sympy realisiert. Ausgang ist die nichtlineare Zustandsgleichung aus Aufgabe 1a
 
+Zur Darstellung der Matrixen müssen diese Spaltenweise ausgegeben werden, nur so ist eine "leserliche" Darstellung möglich
+Schritt 1:   Run Cell ausführen
+Schritt 2.   Run Cell für die Ausgangs bzw. Zustandsgleoichung ausführen
+Schritt 3.   Im Jupiter Terminal die Spalte auswählen und ausgeben lassen (a-e)
+
 
 """
+
+# %%
+import sympy as sym
+import numpy as np
+
 
 # Definition der Variablen
 epsilon, p_epsilon, p_alpha, J1, J2, J3, J4, J5,c1,c2, d1,d2,s1,s2, u1, u2, Vmax = sym.symbols('epsilon, p_epsilon, p_alpha, J1, J2, J3, J4, J5, c1,c2, d1,d2,s1,s2, u1, u2, Vmax')
 
-# %%
+
 
 # Systemgleichung  --> übernommen aus aufgabe 1a)
 ceps = sym.cos(epsilon)
