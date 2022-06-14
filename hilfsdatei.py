@@ -1,15 +1,28 @@
-#%%
+"""
+Author:   Gruppe 11
+Member:   Paul Leonard Zens, Stefan Kaufmann
+Date:     14.09.2022
+Project:  Programmierübung Helirack
+
+"""
 import sympy as sym
 import numpy as np
+from IPython.display import display, Math 
+
+"""
+Aufgabe 1.d 
+Liniarisierung der nichtlinearen Zustandsdifferntialgleichung
+Diese wir mittels der symbolischen Toolbox von Sympy realisiert. Ausgang ist die nichtlineare Zustandsgleichung aus Aufgabe 1a
 
 
-# Aufgabe 1.4 Liniarisierung
+"""
 
-
+# Definition der Variablen
 epsilon, p_epsilon, p_alpha, J1, J2, J3, J4, J5,c1,c2, d1,d2,s1,s2, u1, u2, Vmax = sym.symbols('epsilon, p_epsilon, p_alpha, J1, J2, J3, J4, J5, c1,c2, d1,d2,s1,s2, u1, u2, Vmax')
 
 # %%
-# Eingangsgleichung
+
+# Systemgleichung  --> übernommen aus aufgabe 1a)
 ceps = sym.cos(epsilon)
 seps = sym.sin(epsilon)
 
@@ -27,9 +40,12 @@ dot_epsilon= dot_epsilon
 dot_p_alpha= d1*ceps*f_alpha - d_alpha
 dot_p_epsilon= -Vmax*ceps- 0.5*(J2+J4)*sym.sin(2*epsilon)*dot_alpha**2 - J4*u2*seps*dot_alpha + d2*f_epsilon - c2*(p_epsilon-J5*u1)/(J3+J5)
 
-dx=sym.Matrix([dot_epsilon,dot_p_alpha,dot_p_epsilon])
 
-# Ableitungen nach den Zuständen
+dx=sym.Matrix([dot_epsilon,dot_p_alpha,dot_p_epsilon])   # Zusammenfassung der ergebnisse als Matrix
+
+
+# %% Lineaisierte Zustandsgleichung
+# Symbolische ableitung nach den Zuständen  
 
 a = sym.diff(dx, epsilon)
 b = sym.diff(dx, p_alpha)
@@ -48,8 +64,7 @@ A = [a,b,c]
 B = [d,e]
 
 
-#%%
-# Ausgangsgleichung
+# %% Lineaisierte Ausgangsgleichung
 
 y1 = epsilon
 y2  = dot_alpha
@@ -71,14 +86,6 @@ e = sym.simplify(e)
 
 C = [a,b,c]
 D = [d,e]
+# %% 
+# Die Matrixen A,B,C,D werden im Anschluss händisch in die Funktion linearize der Klasse Heli eingefügt
 
-
-
-
-
-
-
-
-
-
-# %%

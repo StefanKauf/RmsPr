@@ -1,4 +1,11 @@
+""
+
+""
+
+
 # %%
+
+
 import numpy as np
 import scipy.linalg as sla
 import matplotlib.pyplot as plt
@@ -139,6 +146,20 @@ class Heli:
         self.Ta=0.1
 
     def equilibrium(self,y):
+        """  Berechnung des nichtlinearen Systemausgang  
+        Params
+         --------
+        self:          alles Konstanten              
+        y[0]:          Elevations-Winkel epsilon
+        y[1]:          alpha_punkt,  Rotationsgeschwindigkeit des Auslegers um die  Vertikale
+       
+                
+        Returns
+        --------
+        x_quer:          Zustände bei gegebener Ruhelage
+        u_quer:          Eingänge bei gegebener Ruhelage                           
+                
+        """
 
         ## Elevationwinkel
         epsilon=y[0]
@@ -153,6 +174,10 @@ class Heli:
         u=np.zeros((2,))
         
         # %%
+        """
+        Implementierung der Gleichungen für die Ruhelagen (siehe Bericht Aufgabe 1b.)
+        p,q ....  Hilfsgrößen für quadratische Kösungsformel --> es gibt mehr als eine richtige Lösung. Deshalb genügt es auch wenn wir weiters nur eine der beiden Lösungen betrachten.
+        """
         q = -(self.Vmax*np.cos(epsilon)+0.5*(self.J2+self.J4)*np.sin(2*epsilon)*np.square(dalpha))/(self.d2*self.s2)
         p = -self.J4*np.sin(epsilon)*dalpha/(self.d2*self.s2)
 
@@ -172,6 +197,8 @@ class Heli:
         #Berechnung der Systemmatrizen des linearen Systems
         
         ##Ruhelage berechnen
+
+        # Aufruf der Funktion equilibrium welche die Ruhelagen (Zustände und Eingänge) zurückgibt
         x_equi,u_equi=self.equilibrium(y_equi)
         
 
@@ -183,10 +210,9 @@ class Heli:
         C=np.zeros((2,3))
         D=np.zeros((2,2))
         # %%
-        # Hilfsvariablen
+        # Händisches Einsetzten der symbolischen Ableitung aus der "Hilfsdatei.py"
         epsilon = y_equi[0]
-        dalpha  = y_equi[1]
-       # e = 1
+        dalpha  = y_equi[1]       
 
         c2eps = self.J1+(self.J2+self.J4)*np.square(np.cos(epsilon))    
   
@@ -320,6 +346,23 @@ class Heli:
     
     #Nichtlineares Zustandsraumodell des Heli-Racks
     def model(self,t,x,controller): 
+        """  Berechnung der nichtlinearen Zustandsgleichung  
+        Params
+         --------
+        self:            alles Konstanten
+        x:               der Zustandsvektor     
+        x[0]:            Elevations-Winkel epsilon
+        x[1]:            Drehimpuls p_alpha
+        x[2]:            Drehimpuls p_epsilon
+        t:               Zeit
+        controller(t,x): Solldrehzalen werden als Funktion übergeben
+                
+        Returns
+        --------
+        y_[0]:          Epsilon
+        y_[1]:          Alpha_Punkt                                 
+                
+        """
         # t: Zeit
         # Zustand
         # x[0]:  Elevations-Winkel epsilon
@@ -342,17 +385,19 @@ class Heli:
     
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier sollten die korrekten Ableitungen berechnet und zurückgegebenn werden
-        # Hilfsgrößen
+
+        # Hier ist die nichtlineare Zustandsgleichung implementiert, welche händisch (siehe Dokumentation) ermittelt wurde
+        # Der Übersicht halber wurden Hilfsgrößen definiert
         dot_alpha = (p_alpha-self.J4*ceps*u[1])/(self.J1+(self.J4+self.J2)*np.square(ceps))
         dot_epsilon= (p_epsilon-self.J5*u[0])/(self.J3+self.J5)
 
-        f_alpha = self.s1*np.abs(u[0])*u[0]      
-        d_alpha = self.c1*dot_alpha
+        f_alpha = self.s1*np.abs(u[0])*u[0]       # Rotorkraft Alpha
+        d_alpha = self.c1*dot_alpha               # Durch Reibung verursachtes Drehmoment in Alpha
 
-        f_epsilon = self.s2*np.abs(u[1])*u[1]
-        d_epsilon = self.c2*dot_epsilon
+        f_epsilon = self.s2*np.abs(u[1])*u[1]     # Rotorkraft Epsilon
+        d_epsilon = self.c2*dot_epsilon           #  Durch Reibung verursachtes Drehmoment in Epsilon
         
-        
+        # Nicht lineare Zustandsdifferntialgleichung
         dot_epsilon= dot_epsilon 
         dot_p_alpha= self.d1*ceps*f_alpha - d_alpha
         dot_p_epsilon= -self.Vmax*ceps- 0.5*(self.J2+self.J4)*np.sin(2*epsilon)*np.square(dot_alpha) - self.J4*u[1]*seps*dot_alpha + self.d2*f_epsilon - d_epsilon
@@ -363,11 +408,30 @@ class Heli:
         return dx
 
     def output(self,t,x,controller):
+
+        """  Berechnung des nichtlinearen Systemausgang  
+        Params
+         --------
+        self:          alles Konstanten
+        x:             der Zustandsvektor          
+        x[0]:          Elevations-Winkel epsilon
+        x[1]:          Drehimpuls p_alpha
+        x[2]:          Drehimpuls p_epsilon
+                
+        Returns
+        --------
+        y_[0]:          Epsilon
+        y_[1]:          Alpha_Punkt                            
+                
+        """
+
         #Berechnung des Systemausgangs
         #Eingang auswerten
         u=controller(t,x)
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier sollten die korrekten Ausgänge berechnet werden
+        # Basis für die Ausgangsgleichung ist die in der Dokumentation ermittelten Ausgangsgleichung
+
         if np.isscalar(t): 
             y=np.zeros((2,))
             y[0] = x[0]
