@@ -57,6 +57,16 @@ class DiscreteLinearizedSystem(LinearizedSystem):
     def lqr(self,Q,R,S):
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier sollten die korrekten Reglerverstärkungen berechnet werden
+
+        """
+        Q....  Regelabweichungsbestrafung
+        R....  Stellgrößenbestrafung
+        S...   Kopplungsmatrix
+
+        die Implementierung wird lt. Skriptum S. 91 übernommen.
+        dabei löst die Funktion solve_discrete_are die Riccati Gleichung
+        das Ergebnis wird anschließend nach Skriptum S. 89 umgerechnet.  
+        """
         K_lqr=np.zeros((R.shape[0],Q.shape[0]))
 
         P = solve_discrete_are(self.A, self.B,Q, R , None, S)
@@ -77,6 +87,9 @@ class ContinuousLinearizedSystem(LinearizedSystem):
         assert Ta>0
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         ##bitte anpassen
+        """
+        wenn eine Abtastzeit >0 gewählt, dann rufe die Klasse ....  auf
+        """
         return DiscreteLinearizedSystem(self.A,self.B,self.C,self.D,self.x_equi,self.u_equi,self.y_equi,Ta)
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
 
@@ -84,12 +97,19 @@ class ContinuousLinearizedSystem(LinearizedSystem):
     def lqr(self,Q,R,S):
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier sollten die korrekten Reglerverstärkungen berechnet werden
-        K_lqr=np.zeros((R.shape[0],Q.shape[0]))
+        """
+        Q....  Regelabweichungsbestrafung
+        R....  Stellgrößenbestrafung
+        S...   Kopplungsmatrix
 
-        P = solve_continuous_are(self.A, self.B,Q, R , None, S)
-        
-        K_lqr = sla.inv(R)@self.B.transpose()@P
-        
+        die Implementierung wird lt. Skriptum S. 91 übernommen.
+        dabei löst die Funktion solve_discrete_are die Riccati Gleichung
+        das Ergebnis wird anschließend nach Skriptum S. 89 umgerechnet.  
+        """        
+
+        K_lqr=np.zeros((R.shape[0],Q.shape[0]))
+        P = solve_continuous_are(self.A, self.B,Q, R , None, S)        
+        K_lqr = sla.inv(R)@self.B.transpose()@P        
 
         return K_lqr
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
@@ -207,6 +227,11 @@ class Heli:
 
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier die sollten die korrekten Matrizen angegeben werden
+        """
+        Hier wird die um die Ruhelage linearisierten Matrixen berechnet.
+        Basis hierfür ist die aus Hilfsdatei.py erhaltenen Ableitungen der nichtlinearen Zustandsgleichung nach den Zustandsgrößen und Eingängen.
+        Siehe Bericht Nr. 1d
+        """
         # %%
         A=np.zeros((3,3))
         B=np.zeros((3,2))
@@ -366,13 +391,7 @@ class Heli:
         y_[1]:          Alpha_Punkt                                 
                 
         """
-        # t: Zeit
-        # Zustand
-        # x[0]:  Elevations-Winkel epsilon
-        # x[1]:  Drehimpuls p_alpha
-        # x[2]:  Drehimpuls p_epsilon
-        # controller(t,x): Solldrehzalen werden als Funktion übergeben
-      
+              
         #Eingang auswerten
         u=controller(t,x).flatten()   
         assert np.shape(u)==(2,)
@@ -388,9 +407,10 @@ class Heli:
     
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier sollten die korrekten Ableitungen berechnet und zurückgegebenn werden
-
-        # Hier ist die nichtlineare Zustandsgleichung implementiert, welche händisch (siehe Dokumentation) ermittelt wurde
-        # Der Übersicht halber wurden Hilfsgrößen definiert
+        """
+        Hier ist die nichtlineare Zustandsgleichung implementiert, welche händisch (siehe Dokumentation 1b) ermittelt wurde.
+        Der Übersicht halber wurden Hilfsgrößen für die Kräfte und Momente definiert
+        """
         dot_alpha = (p_alpha-self.J4*ceps*u[1])/(self.J1+(self.J4+self.J2)*np.square(ceps))
         dot_epsilon= (p_epsilon-self.J5*u[0])/(self.J3+self.J5)
 
@@ -433,7 +453,9 @@ class Heli:
         u=controller(t,x)
         ######-------!!!!!!Aufgabe!!!!!!-------------########
         #Hier sollten die korrekten Ausgänge berechnet werden
-        # Basis für die Ausgangsgleichung ist die in der Dokumentation ermittelten Ausgangsgleichung
+        """
+         Basis für die Ausgangsgleichung ist die in der Dokumentation ermittelten Ausgangsgleichung. siehe 1b
+        """
 
         if np.isscalar(t): 
             y=np.zeros((2,))
@@ -707,7 +729,6 @@ class DiscreteFlatnessBasedTrajectory:
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
 
         
-
     #Zustandstrajektorie 
     def state(self,k):
         kv=np.atleast_1d(k)
