@@ -718,7 +718,7 @@ class DiscreteFlatnessBasedTrajectory:
         Zur Implementierung des Zeitverlaufs ist es nötig für eta_2 bei k+1 eine linksverschiebung zu bewirken. Da im diskreten Fall die Ableitung des flachen Ausgangs einer Linksverschiebung der Funktion gleichkommt. 
         Dies wird in tau folgendermaßen implementiert:  tau = (k - maxderi[i] + shift)/ (N-maxder[i])     k entspricht hierbei dem aktuellen Zeitpunkt, maxderi[i] der Maximalen Verschiebung für jeden flachen Ausgang seperat und shift die Verschiebung selbst.         
         """    
-        tau = (k-self.maxderi[index]+shift)/(self.N-self.maxderi[index])     # jede Ableitung von der Trajektorie ist um eine Zeiteinheit nach links Verschoben  --> Skriptum S.56-58  
+        tau = (k-self.maxderi[index]+shift)/(self.N)     # jede Ableitung von der Trajektorie ist um eine Zeiteinheit nach links Verschoben  --> Skriptum S.56-58  
         
         eta= np.zeros_like(k)
         
