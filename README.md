@@ -1,2 +1,2 @@
 # RmsPr
-Projekt für REgelung mechatronischer Systeme
+Projekt für Regelung mechatronischer Systeme
