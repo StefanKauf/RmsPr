@@ -505,7 +505,6 @@ class Heli:
         print("Maximaler absoluter Fehler in Ausgangsgleichung (euklidische Norm):",error_y_abs_max)
         print("Maximaler relativer Fehler in Ausgangsgleichung (euklidische Norm):",error_y_rel_max)
         
-    
 
 class ContinuousFlatnessBasedTrajectory:
     """Zeitkontinuierliche flachheitsbasierte Trajektorien-Planung zum Arbeitspunktwechsel 
@@ -543,21 +542,20 @@ class ContinuousFlatnessBasedTrajectory:
 
         """
         Für die stationären Werte werden lediglich eta 1 und 2, nicht jedoch deren Ableitungen betrachtet. Deshalb reduziert sich die Ausgansmatrix C auf zwei Spalten.
-        y = C*eta + D,    D = 0
-        diese wird auf eta aufgelöst
-
-        eta = inv(C)*y    --> eta entspricht dabei einem Spaltenvektor mit zwei stationären flachen Ausgängen  [eta_1 , eta_2] für die jeweiligen Teilssysteme     
+        y = C*eta + D*u
+        diese wird nach eta aufgelöst
+        eta = inv(C)*(y-D*u)    --> eta entspricht dabei einem Spaltenvektor mit zwei stationären flachen Ausgängen  [eta_1 , eta_2] für die jeweiligen Teilssysteme     
 
         """
         self.eta_a=np.zeros_like(ya_rel)
         self.eta_b=np.zeros_like(yb_rel)
 
         C_inv = np.linalg.inv(self.Crnf[:,0:2])
-
-        self.eta_a = np.dot(C_inv,ya_rel)         
-        self.eta_b = np.dot(C_inv,yb_rel) 
-
-       
+        heli=Heli()
+        dummy,u_equi1=heli.equilibrium(ya)
+        dummy2,u_equi2=heli.equilibrium(yb)
+        self.eta_a = np.dot(C_inv,ya_rel-np.dot(self.linearized_system.D,u_equi1-linearized_system.u_equi))       
+        self.eta_b = np.dot(C_inv,yb_rel-np.dot(self.linearized_system.D,u_equi2-linearized_system.u_equi))
 
         ######-------!!!!!!Aufgabe Ende!!!!!!-------########
 
@@ -589,7 +587,7 @@ class ContinuousFlatnessBasedTrajectory:
             eta=eta+[self.flat_output(tv,index,deri) for deri in range(self.kronecker[index])]
         xrnf=np.vstack(eta)
         """   
-        nun wird eta in die Orginalkoordinaten Transformiert und die Ruhelage dazugerechnet, da wir bis jetzt nur die Differenz von eta nicht jedoch die Absolutwerte betrachtet haben.
+        nun wird eta in die Originalkoordinaten Transformiert und die Ruhelage dazugerechnet, da wir bis jetzt nur die Differenz von eta nicht jedoch die Absolutwerte betrachtet haben.
         Die Transformationsforschrift kann dem Skriptum S.79   x_quer = Q*x   entnommen werden
         """
         # Transform from RNF to original Koordinates
@@ -613,7 +611,8 @@ class ContinuousFlatnessBasedTrajectory:
         x_rel=x_abs-self.linearized_system.x_equi.reshape((dim_x,1))
         u_rel=u_abs-self.linearized_system.u_equi.reshape((dim_u,1))
         y_rel=self.linearized_system.C@x_rel+self.linearized_system.D@u_rel
-        y_abs=y_rel+self.linearized_system.y_equi.reshape((dim_y,1))
+        y_abs=y_rel +self.linearized_system.y_equi.reshape((dim_y,1))
+        #y_abs = self.linearized_system.C@x_abs+self.linearized_system.D@u_abs      #Simpler
         if (np.isscalar(t)):
             y_abs=y_abs[:,0]
         return y_abs
