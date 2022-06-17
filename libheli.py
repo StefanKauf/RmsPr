@@ -551,9 +551,11 @@ class ContinuousFlatnessBasedTrajectory:
         self.eta_b=np.zeros_like(yb_rel)
 
         C_inv = np.linalg.inv(self.Crnf[:,0:2])
+
         heli=Heli()
         dummy,u_equi1=heli.equilibrium(ya)
         dummy2,u_equi2=heli.equilibrium(yb)
+
         self.eta_a = np.dot(C_inv,ya_rel-np.dot(self.linearized_system.D,u_equi1-linearized_system.u_equi))       
         self.eta_b = np.dot(C_inv,yb_rel-np.dot(self.linearized_system.D,u_equi2-linearized_system.u_equi))
 
@@ -679,10 +681,10 @@ class DiscreteFlatnessBasedTrajectory:
         """
         Für die stationären Werte müssen eta_1 eta_2 und um 1 verschobenen eta_2 betrachtet werden.  Die Ausgngsmatrix kann auf zwei Splalten reduziert werden, wenn man die letzten zwei Spalten
         Komponentenweise addiert. Beide sind eta_2. Damit ergibt sich die Form wie im Skriptum S.56 
-        y = C*eta + D,    D = 0
-        diese wird auf eta aufgelöst
+        y = C*eta + D*u
+        diese wird nach eta aufgelöst
 
-        eta = inv(C)*y    --> eta entspricht dabei einem Spaltenvektor mit zwei stationären flachen Ausgängen  [eta_1 , eta_2] für die jeweiligen Teilssysteme     
+        eta = inv(C)*(y-D*u)    --> eta entspricht dabei einem Spaltenvektor mit zwei stationären flachen Ausgängen  [eta_1 , eta_2] für die jeweiligen Teilssysteme     
 
         """
 
@@ -692,7 +694,13 @@ class DiscreteFlatnessBasedTrajectory:
         C_discrete = self.Crnf[:,0:2] + 0
         C_discrete[:,1] = self.Crnf[:,1] + self.Crnf[:,2] 
 
-        C_inv = np.linalg.inv(C_discrete)            
+        C_inv = np.linalg.inv(C_discrete)       
+
+        heli=Heli()
+        dummy,u_equi1=heli.equilibrium(ya)
+        dummy2,u_equi2=heli.equilibrium(yb)
+        ya_rel -= linearized_system.D @ (u_equi1-linearized_system.u_equi)
+        yb_rel -= linearized_system.D @ (u_equi2-linearized_system.u_equi)
 
         self.eta_a =  np.dot(C_inv,ya_rel)        
         self.eta_b =  np.dot(C_inv,yb_rel) 
@@ -714,10 +722,12 @@ class DiscreteFlatnessBasedTrajectory:
         # 
         """
         Die Implementierung von eta kann dem Skriptum Seite 56-58 entnommen werden. 
-        Zur Implementierung des Zeitverlaufs ist es nötig für eta_2 bei k+1 eine linksverschiebung zu bewirken. Da im diskreten Fall die Ableitung des flachen Ausgangs einer Linksverschiebung der Funktion gleichkommt. 
-        Dies wird in tau folgendermaßen implementiert:  tau = (k - maxderi[i] + shift)/ (N-maxder[i])     k entspricht hierbei dem aktuellen Zeitpunkt, maxderi[i] der Maximalen Verschiebung für jeden flachen Ausgang seperat und shift die Verschiebung selbst.         
+        Zur Implementierung des Zeitverlaufs ist es nötig für eta_2 bei k+1 eine linksverschiebung zu bewirken.
+        Da im diskreten Fall die Ableitung des flachen Ausgangs einer Linksverschiebung der Funktion gleichkommt. 
+        Dies wird in tau folgendermaßen implementiert:  tau = (k + shift)/ (N)
+        k entspricht hierbei dem aktuellen Zeitpunkt, maxderi[i] der Maximalen Verschiebung für jeden flachen Ausgang seperat und shift die Verschiebung selbst.         
         """    
-        tau = (k-self.maxderi[index]+shift)/(self.N)     # jede Ableitung von der Trajektorie ist um eine Zeiteinheit nach links Verschoben  --> Skriptum S.56-58  
+        tau = (k+shift)/(self.N)     # jede Ableitung von der Trajektorie ist um eine Zeiteinheit nach links Verschoben  --> Skriptum S.56-58  
         
         eta= np.zeros_like(k)
         
@@ -782,7 +792,7 @@ class DiscreteFlatnessBasedTrajectory:
         result=np.zeros((dim_u,dim_k))
         """   
         der flache Ausgang besteht aus dem jetzigen Wert eta + der Änderung. Die Änderung hängt nun von der Linksverschiebung ab.
-        im zweiten Schritt xrnf = eta wir eta als Spaltenvektor dargestellt. In der RNF ist der erste Zustand = dem flachen Ausgang, da das Teilsystem somit nur mehr von eta, dessen Ableitungen und dem Eingang abhängt.
+        Im zweiten Schritt xrnf = eta wird eta als Spaltenvektor dargestellt. In der RNF ist der erste Zustand = dem flachen Ausgang, da das Teilsystem somit nur mehr von eta, dessen Ableitungen und dem Eingang abhängt.
         """
         eta=list()
         for index in range(dim_u):
