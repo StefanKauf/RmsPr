@@ -566,9 +566,9 @@ class ContinuousFlatnessBasedTrajectory:
     def flat_output(self,t,index,derivative):
         tau = t / self.T
         if derivative==0:
-            return self.eta_a[index] + (self.eta_b[index] - self.eta_a[index]) * poly_transition(tau,0,self.maxderi[index])
+            return self.eta_a[index] + (self.eta_b[index] - self.eta_a[index]) * poly_transition(tau,0,self.maxderi[index]+1)
         else:
-            return (self.eta_b[index] - self.eta_a[index]) * poly_transition(tau,derivative,self.maxderi[index])/self.T**derivative 
+            return (self.eta_b[index] - self.eta_a[index]) * poly_transition(tau,derivative,self.maxderi[index]+1)/self.T**derivative 
 
     #Zustandstrajektorie 
     def state(self,t):
@@ -731,7 +731,7 @@ class DiscreteFlatnessBasedTrajectory:
         
         eta= np.zeros_like(k)
         
-        eta = self.eta_a[index] + (self.eta_b[index] - self.eta_a[index]) * poly_transition(tau,0,self.maxderi[index])
+        eta = self.eta_a[index] + (self.eta_b[index] - self.eta_a[index]) * poly_transition(tau,0,self.maxderi[index]+1)
         
         return eta
 
